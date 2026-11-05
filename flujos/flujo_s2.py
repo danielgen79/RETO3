@@ -65,7 +65,14 @@ def disenar(s: Estado) -> Estado:
 
 
 def planificar(s: Estado) -> Estado:
-    plan, costo = desarrollador.planificar(s["hu"], s.get("comentarios", ""))   # Agente 3, solo lectura
+    comentarios = s.get("comentarios", "")
+    if comentarios:
+        # El desarrollador recibe su plan anterior y TODOS los comentarios, no solo el último,
+        # para que al rehacer el plan no pierda correcciones que ya había aplicado.
+        comentarios = (f"Tu plan anterior fue:\n{s['plan']}\n\n"
+                       f"Conserva lo que estaba bien y aplica TODOS estos comentarios, no solo el último:\n"
+                       f"{comentarios}")
+    plan, costo = desarrollador.planificar(s["hu"], comentarios)   # Agente 3, solo lectura
     return {"plan": plan, "costo_usd": costo}
 
 
@@ -73,7 +80,9 @@ def aprobar_plan(s: Estado) -> Estado:
     decision = interrupt({"plan": s["plan"], "pregunta": "¿Aprobar el plan? Escribe 'si' o tus comentarios"})
     if decision.strip().lower() == "si":
         return {"plan_aprobado": True, "bitacora": ["Plan aprobado por una persona"]}
-    return {"plan_aprobado": False, "comentarios": decision, "bitacora": [f"Plan rechazado: {decision}"]}
+     # Los comentarios se acumulan: cada rechazo se suma a los anteriores en lugar de reemplazarlos.
+    acumulados = f"{s.get('comentarios', '')}\n- {decision}".strip()
+    return {"plan_aprobado": False, "comentarios": acumulados, "bitacora": [f"Plan rechazado: {decision}"]}
 
 
 def despues_de_aprobar(s: Estado) -> Literal["construir", "planificar"]:
