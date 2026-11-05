@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
 import { obtenerDepartamentos, obtenerEmpleados } from "../api/empleados.js";
+import ModalBaja from "./ModalBaja.jsx";
 
 const ETIQUETAS_ESTADO = {
   activo: "Activo",
   baja: "Baja",
 };
 
-export default function DirectorioEmpleados() {
+export default function DirectorioEmpleados({
+  onEditar,
+  refrescarContador = 0,
+} = {}) {
   const [empleados, setEmpleados] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [departamento, setDepartamento] = useState("");
   const [departamentos, setDepartamentos] = useState([]);
+  const [idDandoBaja, setIdDandoBaja] = useState(null);
 
   useEffect(() => {
     obtenerDepartamentos()
@@ -18,11 +23,19 @@ export default function DirectorioEmpleados() {
       .catch(() => setDepartamentos([]));
   }, []);
 
-  useEffect(() => {
+  function cargarEmpleados() {
     obtenerEmpleados({ busqueda, departamento })
       .then(setEmpleados)
       .catch(() => setEmpleados([]));
-  }, [busqueda, departamento]);
+  }
+
+  useEffect(() => {
+    cargarEmpleados();
+  }, [busqueda, departamento, refrescarContador]);
+
+  const empleadoDandoBaja = empleados.find(
+    (empleado) => empleado.id === idDandoBaja
+  );
 
   return (
     <section>
@@ -61,6 +74,7 @@ export default function DirectorioEmpleados() {
               <th>Puesto</th>
               <th>Departamento</th>
               <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -75,10 +89,32 @@ export default function DirectorioEmpleados() {
                 <td data-testid={`estado-empleado-${empleado.id}`}>
                   {ETIQUETAS_ESTADO[empleado.estado] || empleado.estado}
                 </td>
+                <td>
+                  <button
+                    data-testid={`editar-empleado-${empleado.id}`}
+                    onClick={() => onEditar?.(empleado)}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    data-testid={`baja-empleado-${empleado.id}`}
+                    onClick={() => setIdDandoBaja(empleado.id)}
+                  >
+                    Dar de baja
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {empleadoDandoBaja && (
+        <ModalBaja
+          empleado={empleadoDandoBaja}
+          onConfirmada={cargarEmpleados}
+          onCancelar={() => setIdDandoBaja(null)}
+        />
       )}
     </section>
   );

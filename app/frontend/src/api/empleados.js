@@ -30,3 +30,21 @@ export async function obtenerEmpleados({ busqueda, departamento } = {}) {
   const respuesta = await fetch(`/api/empleados${cadena ? `?${cadena}` : ""}`);
   return leerRespuesta(respuesta);
 }
+
+export async function actualizarEmpleado(id, datos) {
+  const respuesta = await fetch(`/api/empleados/${id}`, {
+    method: "PUT",
+    headers: JSON_HEADERS,
+    body: JSON.stringify(datos),
+  });
+  return leerRespuesta(respuesta);
+}
+
+export async function darDeBajaEmpleado(id, fechaBaja) {
+  const respuesta = await fetch(`/api/empleados/${id}/baja`, {
+    method: "POST",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ fecha_baja: fechaBaja }),
+  });
+  return leerRespuesta(respuesta);
+}

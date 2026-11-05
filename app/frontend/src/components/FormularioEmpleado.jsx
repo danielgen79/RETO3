@@ -9,7 +9,7 @@ const ESTADO_INICIAL = {
   fecha_ingreso: "",
 };
 
-export default function FormularioEmpleado() {
+export default function FormularioEmpleado({ onCreado } = {}) {
   const [datos, setDatos] = useState(ESTADO_INICIAL);
   const [departamentos, setDepartamentos] = useState([]);
   const [mensajeExito, setMensajeExito] = useState("");
@@ -35,6 +35,7 @@ export default function FormularioEmpleado() {
       const empleado = await crearEmpleado(datos);
       setMensajeExito(`Empleado ${empleado.numero_empleado} registrado correctamente`);
       setDatos(ESTADO_INICIAL);
+      onCreado?.();
     } catch (error) {
       setMensajeError(error.message);
     }

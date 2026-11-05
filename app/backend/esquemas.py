@@ -52,6 +52,39 @@ class EmpleadoCrear(BaseModel):
         return valor
 
 
+class EmpleadoActualizar(BaseModel):
+    nombre: str | None = None
+    puesto: str | None = None
+    departamento: str | None = None
+
+    @field_validator("nombre")
+    @classmethod
+    def validar_nombre(cls, valor: str) -> str:
+        if not (2 <= len(valor) <= 80):
+            raise ValueError("El nombre debe tener entre 2 y 80 caracteres")
+        return valor
+
+    @field_validator("puesto")
+    @classmethod
+    def validar_puesto(cls, valor: str) -> str:
+        if not (2 <= len(valor) <= 60):
+            raise ValueError("El puesto debe tener entre 2 y 60 caracteres")
+        return valor
+
+    @field_validator("departamento")
+    @classmethod
+    def validar_departamento(cls, valor: str) -> str:
+        if valor not in DEPARTAMENTOS:
+            raise ValueError(
+                "El departamento debe ser uno de: " + ", ".join(DEPARTAMENTOS)
+            )
+        return valor
+
+
+class EmpleadoBaja(BaseModel):
+    fecha_baja: date
+
+
 class EmpleadoSalida(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

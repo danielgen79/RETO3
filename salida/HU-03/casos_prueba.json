@@ -1,0 +1,214 @@
+{
+  "historia": "HU-03",
+  "casos": [
+    {
+      "id": "CP-01",
+      "escenario": "Editar puesto y departamento de un empleado activo",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con nombre Laura Gómez, correo laura.gomez@empresa.com, puesto Analista Jr, departamento Ventas y estado activo"
+      ],
+      "pasos": [
+        "Enviar PUT /api/empleados/EMP-0007 con puesto 'Analista Senior' y departamento 'Tecnología'"
+      ],
+      "datos": {
+        "numero_empleado": "EMP-0007",
+        "puesto": "Analista Senior",
+        "departamento": "Tecnología"
+      },
+      "resultado_esperado": "El sistema responde 200; el empleado EMP-0007 queda con puesto 'Analista Senior' y departamento 'Tecnología'; numero_empleado sigue siendo EMP-0007 y correo sigue siendo laura.gomez@empresa.com"
+    },
+    {
+      "id": "CP-02",
+      "escenario": "Editar puesto y departamento de un empleado activo",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con nombre Laura Gómez, correo laura.gomez@empresa.com, puesto Analista Jr, departamento Ventas y estado activo"
+      ],
+      "pasos": [
+        "Ir al directorio de empleados (tabla-empleados)",
+        "Clic en editar-empleado-EMP-0007",
+        "En el campo empleado-puesto escribir 'Analista Senior'",
+        "En el campo empleado-departamento seleccionar 'Tecnología'",
+        "Clic en empleado-guardar"
+      ],
+      "datos": {
+        "puesto": "Analista Senior",
+        "departamento": "Tecnología"
+      },
+      "resultado_esperado": "Se muestra mensaje-exito y la fila fila-empleado-EMP-0007 refleja puesto 'Analista Senior' y departamento 'Tecnología'"
+    },
+    {
+      "id": "CP-03",
+      "escenario": "Dar de baja a un empleado activo",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con fecha_ingreso 2022-05-10 y estado activo"
+      ],
+      "pasos": [
+        "Enviar petición para dar de baja al empleado EMP-0007 con fecha_baja '2024-03-01'"
+      ],
+      "datos": {
+        "numero_empleado": "EMP-0007",
+        "fecha_ingreso": "2022-05-10",
+        "fecha_baja": "2024-03-01"
+      },
+      "resultado_esperado": "El sistema responde 200; el empleado EMP-0007 queda con estado 'baja' y fecha_baja '2024-03-01'; sigue apareciendo en el directorio"
+    },
+    {
+      "id": "CP-04",
+      "escenario": "Dar de baja a un empleado activo",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con fecha_ingreso 2022-05-10 y estado activo"
+      ],
+      "pasos": [
+        "Ir al directorio de empleados (tabla-empleados)",
+        "Clic en baja-empleado-EMP-0007",
+        "En el campo empleado-fecha-baja ingresar '2024-03-01'",
+        "Clic en confirmar-baja"
+      ],
+      "datos": {
+        "fecha_baja": "2024-03-01"
+      },
+      "resultado_esperado": "Se muestra mensaje-exito; estado-empleado-EMP-0007 muestra 'Baja'; la fila fila-empleado-EMP-0007 sigue visible en tabla-empleados"
+    },
+    {
+      "id": "CP-05",
+      "escenario": "No se puede editar a un empleado dado de baja",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe el empleado EMP-0008 con estado baja"
+      ],
+      "pasos": [
+        "Enviar PUT /api/empleados/EMP-0008 con puesto 'Analista Senior'"
+      ],
+      "datos": {
+        "numero_empleado": "EMP-0008",
+        "puesto": "Analista Senior"
+      },
+      "resultado_esperado": "El sistema responde 409 con mensaje 'No se puede editar a un empleado dado de baja'"
+    },
+    {
+      "id": "CP-06",
+      "escenario": "No se puede editar a un empleado dado de baja",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe el empleado EMP-0008 con estado baja"
+      ],
+      "pasos": [
+        "Ir al directorio de empleados (tabla-empleados)",
+        "Clic en editar-empleado-EMP-0008",
+        "En el campo empleado-puesto escribir 'Analista Senior'",
+        "Clic en empleado-guardar"
+      ],
+      "datos": {
+        "puesto": "Analista Senior"
+      },
+      "resultado_esperado": "Se muestra mensaje-error con el texto 'No se puede editar a un empleado dado de baja'"
+    },
+    {
+      "id": "CP-07",
+      "escenario": "Error al editar con un puesto demasiado corto",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con estado activo"
+      ],
+      "pasos": [
+        "Enviar PUT /api/empleados/EMP-0007 con puesto 'A'"
+      ],
+      "datos": {
+        "numero_empleado": "EMP-0007",
+        "puesto": "A"
+      },
+      "resultado_esperado": "El sistema responde 422 señalando error en el campo 'puesto'"
+    },
+    {
+      "id": "CP-08",
+      "escenario": "Error al editar con un puesto demasiado corto",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con estado activo"
+      ],
+      "pasos": [
+        "Ir al directorio de empleados (tabla-empleados)",
+        "Clic en editar-empleado-EMP-0007",
+        "En el campo empleado-puesto escribir 'A'",
+        "Clic en empleado-guardar"
+      ],
+      "datos": {
+        "puesto": "A"
+      },
+      "resultado_esperado": "Se muestra mensaje-error señalando que el campo 'puesto' debe corregirse"
+    },
+    {
+      "id": "CP-09",
+      "escenario": "Error al editar con un departamento que no existe en el catálogo",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con estado activo"
+      ],
+      "pasos": [
+        "Enviar PUT /api/empleados/EMP-0007 con departamento 'Marketing'"
+      ],
+      "datos": {
+        "numero_empleado": "EMP-0007",
+        "departamento": "Marketing"
+      },
+      "resultado_esperado": "El sistema responde 422 señalando error en el campo 'departamento'"
+    },
+    {
+      "id": "CP-10",
+      "escenario": "Error al editar con un departamento que no existe en el catálogo",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con estado activo"
+      ],
+      "pasos": [
+        "Ir al directorio de empleados (tabla-empleados)",
+        "Clic en editar-empleado-EMP-0007",
+        "En el campo empleado-departamento escribir 'Marketing'",
+        "Clic en empleado-guardar"
+      ],
+      "datos": {
+        "departamento": "Marketing"
+      },
+      "resultado_esperado": "Se muestra mensaje-error señalando que el campo 'departamento' debe corregirse"
+    },
+    {
+      "id": "CP-11",
+      "escenario": "Error al dar de baja con una fecha de baja anterior a la fecha de ingreso",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con fecha_ingreso 2022-05-10 y estado activo"
+      ],
+      "pasos": [
+        "Enviar petición para dar de baja al empleado EMP-0007 con fecha_baja '2022-01-01'"
+      ],
+      "datos": {
+        "numero_empleado": "EMP-0007",
+        "fecha_ingreso": "2022-05-10",
+        "fecha_baja": "2022-01-01"
+      },
+      "resultado_esperado": "El sistema responde 422 señalando error en el campo 'fecha_baja'"
+    },
+    {
+      "id": "CP-12",
+      "escenario": "Error al dar de baja con una fecha de baja anterior a la fecha de ingreso",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe el empleado EMP-0007 con fecha_ingreso 2022-05-10 y estado activo"
+      ],
+      "pasos": [
+        "Ir al directorio de empleados (tabla-empleados)",
+        "Clic en baja-empleado-EMP-0007",
+        "En el campo empleado-fecha-baja ingresar '2022-01-01'",
+        "Clic en confirmar-baja"
+      ],
+      "datos": {
+        "fecha_baja": "2022-01-01"
+      },
+      "resultado_esperado": "Se muestra mensaje-error señalando que el campo 'fecha_baja' debe corregirse"
+    }
+  ]
+}

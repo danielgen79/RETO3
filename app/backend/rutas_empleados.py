@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from catalogo import DEPARTAMENTOS
 from database import obtener_db
-from esquemas import EmpleadoCrear, EmpleadoSalida
+from esquemas import EmpleadoActualizar, EmpleadoBaja, EmpleadoCrear, EmpleadoSalida
 from modelos import Empleado
 
 router = APIRouter()
@@ -17,6 +17,13 @@ router = APIRouter()
 def generar_numero_empleado(db: Session) -> str:
     total = db.query(func.count(Empleado.id)).scalar() or 0
     return f"EMP-{total + 1:04d}"
+
+
+def obtener_empleado_o_404(db: Session, id: int) -> Empleado:
+    empleado = db.query(Empleado).filter(Empleado.id == id).first()
+    if empleado is None:
+        raise HTTPException(status_code=404, detail="El empleado no existe")
+    return empleado
 
 
 @router.post("/empleados", response_model=EmpleadoSalida, status_code=201)
@@ -69,3 +76,43 @@ def listar_empleados(
 @router.get("/departamentos")
 def obtener_departamentos():
     return DEPARTAMENTOS
+
+
+@router.put("/empleados/{id}", response_model=EmpleadoSalida)
+def actualizar_empleado(
+    id: int, datos: EmpleadoActualizar, db: Session = Depends(obtener_db)
+):
+    empleado = obtener_empleado_o_404(db, id)
+    if empleado.estado == "baja":
+        raise HTTPException(
+            status_code=409,
+            detail="No se puede editar a un empleado dado de baja",
+        )
+
+    if datos.nombre is not None:
+        empleado.nombre = datos.nombre
+    if datos.puesto is not None:
+        empleado.puesto = datos.puesto
+    if datos.departamento is not None:
+        empleado.departamento = datos.departamento
+
+    db.commit()
+    db.refresh(empleado)
+    return empleado
+
+
+@router.post("/empleados/{id}/baja", response_model=EmpleadoSalida)
+def dar_baja_empleado(id: int, datos: EmpleadoBaja, db: Session = Depends(obtener_db)):
+    empleado = obtener_empleado_o_404(db, id)
+    if datos.fecha_baja < empleado.fecha_ingreso:
+        raise HTTPException(
+            status_code=422,
+            detail="La fecha de baja no puede ser anterior a la fecha de ingreso",
+        )
+
+    empleado.estado = "baja"
+    empleado.fecha_baja = datos.fecha_baja
+
+    db.commit()
+    db.refresh(empleado)
+    return empleado

@@ -9,7 +9,13 @@ from agentes.claude_code import EDICION, ejecutar_claude_code
 
 INSTRUCCIONES = """Eres el ingeniero de automatización de pruebas del equipo. Conviertes casos de prueba
 en pruebas automatizadas. Nunca modificas el código de la aplicación: si una prueba falla
-porque la aplicación está mal, lo reportas, no lo arreglas."""
+porque la aplicación está mal, lo reportas, no lo arreglas.
+No uses pytest.skip, pytest.xfail ni marcas skip para evitar un caso: una prueba saltada no
+comprueba nada y oculta errores. Si una precondición requiere una función que ya existe en la
+aplicación (por ejemplo dar de baja), úsala por la API. Si la funcionalidad no existe, escribe la
+prueba de todos modos y deja que falle, para que el triage lo vea. Si un caso e2e es imposible
+desde la pantalla (por ejemplo, elegir una opción que un <select> no ofrece), cúbrelo solo a
+nivel API y explícalo en el docstring."""
 
 ESCRITURA = ["tests/*"]
 PROGRAMAS = {"cd", "ls", "cat", "python", "python3", "pytest"}

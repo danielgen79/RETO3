@@ -3,13 +3,6 @@
 import uuid
 
 import httpx
-import pytest
-
-RAZON_SIN_BAJA = (
-    "El frontend no tiene ninguna acción para dar de baja a un empleado "
-    "(faltan los data-testid 'baja-empleado-{id}' y 'confirmar-baja'), así que "
-    "la precondición del caso no se puede preparar. Reportar al equipo de desarrollo."
-)
 
 
 def correo_unico(local: str, dominio: str = "empresa.com") -> str:
@@ -38,6 +31,16 @@ def registrar_empleado(
     return respuesta.json()
 
 
+def dar_baja(url_api, id_empleado, fecha_baja="2024-06-01"):
+    """Da de baja a un empleado por la API para preparar la precondición de un caso."""
+    respuesta = httpx.post(
+        f"{url_api}/api/empleados/{id_empleado}/baja",
+        json={"fecha_baja": fecha_baja},
+    )
+    assert respuesta.status_code == 200
+    return respuesta.json()
+
+
 def fila_de(page, numero_empleado):
     """Ubica la fila del directorio correspondiente a un número de empleado."""
     celda = page.locator('[data-testid^="numero-empleado-"]', has_text=numero_empleado)
@@ -46,9 +49,49 @@ def fila_de(page, numero_empleado):
     return page.get_by_test_id(f"fila-empleado-{id_fila}")
 
 
-@pytest.mark.skip(reason=RAZON_SIN_BAJA)
-def test_cp_02_listado_completo(page, url_web):
+def test_cp_02_listado_completo(page, url_web, url_api):
     """CP-02: Ver el listado completo del directorio."""
+    activo_1 = registrar_empleado(
+        url_api,
+        "Ana Pérez",
+        correo_unico("Ana.Perez"),
+        puesto="Analista de RH",
+        departamento="Recursos Humanos",
+    )
+    creado_b = registrar_empleado(
+        url_api,
+        "Luis Gómez",
+        correo_unico("Luis.Gomez"),
+        puesto="Vendedor",
+        departamento="Ventas",
+    )
+    de_baja = dar_baja(url_api, creado_b["id"])
+    activo_2 = registrar_empleado(
+        url_api,
+        "María López",
+        correo_unico("Maria.Lopez"),
+        puesto="Contadora",
+        departamento="Finanzas",
+    )
+
+    page.goto(url_web)
+    page.get_by_test_id("tabla-empleados").wait_for()
+
+    for esperado, estado_esperado in (
+        (activo_1, "Activo"),
+        (de_baja, "Baja"),
+        (activo_2, "Activo"),
+    ):
+        fila = page.get_by_test_id(f"fila-empleado-{esperado['id']}")
+        fila.wait_for()
+        assert (
+            page.get_by_test_id(f"numero-empleado-{esperado['id']}").text_content()
+            == esperado["numero_empleado"]
+        )
+        assert (
+            page.get_by_test_id(f"estado-empleado-{esperado['id']}").text_content()
+            == estado_esperado
+        )
 
 
 def test_cp_04_busqueda_por_nombre(page, url_web, url_api):
@@ -93,9 +136,18 @@ def test_cp_08_filtrar_por_departamento(page, url_web, url_api):
     fila_de(page, creado["numero_empleado"]).wait_for()
 
 
-@pytest.mark.skip(reason=RAZON_SIN_BAJA)
-def test_cp_10_empleado_de_baja_sigue_en_directorio(page, url_web):
+def test_cp_10_empleado_de_baja_sigue_en_directorio(page, url_web, url_api):
     """CP-10: Un empleado dado de baja sigue apareciendo en el directorio."""
+    creado = registrar_empleado(
+        url_api, "Luis Gómez", correo_unico("Luis.Gomez"), puesto="Vendedor", departamento="Ventas"
+    )
+    de_baja = dar_baja(url_api, creado["id"])
+
+    page.goto(url_web)
+
+    fila = page.get_by_test_id(f"fila-empleado-{de_baja['id']}")
+    fila.wait_for()
+    assert page.get_by_test_id(f"estado-empleado-{de_baja['id']}").text_content() == "Baja"
 
 
 def test_cp_12_busqueda_sin_resultados(page, url_web):

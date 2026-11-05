@@ -3,13 +3,6 @@
 import uuid
 
 import httpx
-import pytest
-
-RAZON_SIN_BAJA = (
-    "La API no expone ninguna forma de poner a un empleado en estado 'baja' "
-    "(no hay endpoint para darlo de baja), así que la precondición del caso "
-    "no se puede preparar. Reportar al equipo de desarrollo."
-)
 
 
 def correo_unico(local: str, dominio: str = "empresa.com") -> str:
@@ -38,9 +31,57 @@ def registrar_empleado(
     return respuesta.json()
 
 
-@pytest.mark.skip(reason=RAZON_SIN_BAJA)
+def dar_baja(url_api, id_empleado, fecha_baja="2024-06-01"):
+    """Da de baja a un empleado por la API para preparar la precondición de un caso."""
+    respuesta = httpx.post(
+        f"{url_api}/api/empleados/{id_empleado}/baja",
+        json={"fecha_baja": fecha_baja},
+    )
+    assert respuesta.status_code == 200
+    return respuesta.json()
+
+
 def test_cp_01_listado_completo(url_api):
     """CP-01: Ver el listado completo del directorio."""
+    activo_1 = registrar_empleado(
+        url_api,
+        "Ana Pérez",
+        correo_unico("Ana.Perez"),
+        puesto="Analista de RH",
+        departamento="Recursos Humanos",
+    )
+    creado_b = registrar_empleado(
+        url_api,
+        "Luis Gómez",
+        correo_unico("Luis.Gomez"),
+        puesto="Vendedor",
+        departamento="Ventas",
+    )
+    de_baja = dar_baja(url_api, creado_b["id"])
+    activo_2 = registrar_empleado(
+        url_api,
+        "María López",
+        correo_unico("Maria.Lopez"),
+        puesto="Contadora",
+        departamento="Finanzas",
+    )
+
+    respuesta = httpx.get(f"{url_api}/api/empleados")
+
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    assert isinstance(cuerpo, list)
+
+    por_numero = {e["numero_empleado"]: e for e in cuerpo}
+    for esperado, estado_esperado in (
+        (activo_1, "activo"),
+        (de_baja, "baja"),
+        (activo_2, "activo"),
+    ):
+        encontrado = por_numero[esperado["numero_empleado"]]
+        assert encontrado["estado"] == estado_esperado
+        for campo in ("numero_empleado", "nombre", "puesto", "departamento", "estado"):
+            assert campo in encontrado
 
 
 def test_cp_03_busqueda_por_nombre(url_api):
@@ -91,9 +132,20 @@ def test_cp_07_filtrar_por_departamento(url_api):
     assert all(e["departamento"] == "Ventas" for e in cuerpo)
 
 
-@pytest.mark.skip(reason=RAZON_SIN_BAJA)
 def test_cp_09_empleado_de_baja_sigue_en_listado(url_api):
     """CP-09: Un empleado dado de baja sigue apareciendo en el directorio."""
+    correo = correo_unico("Luis.Gomez")
+    creado = registrar_empleado(
+        url_api, "Luis Gómez", correo, puesto="Vendedor", departamento="Ventas"
+    )
+    dar_baja(url_api, creado["id"])
+
+    respuesta = httpx.get(f"{url_api}/api/empleados")
+
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    coincidencia = next(e for e in cuerpo if e["numero_empleado"] == creado["numero_empleado"])
+    assert coincidencia["estado"] == "baja"
 
 
 def test_cp_11_busqueda_sin_coincidencias(url_api):
