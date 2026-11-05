@@ -1,0 +1,240 @@
+{
+  "historia": "HU-01",
+  "casos": [
+    {
+      "id": "CP-01",
+      "escenario": "Registro exitoso de un nuevo empleado",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con correo ana.perez@empresa.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'Ana Pérez', correo 'Ana.Perez@empresa.com', puesto 'Analista de RH', departamento 'Recursos Humanos', fecha_ingreso '2024-01-15'",
+        "Verificar el código de estado de la respuesta",
+        "Verificar los campos del empleado creado"
+      ],
+      "datos": {
+        "nombre": "Ana Pérez",
+        "correo": "Ana.Perez@empresa.com",
+        "puesto": "Analista de RH",
+        "departamento": "Recursos Humanos",
+        "fecha_ingreso": "2024-01-15"
+      },
+      "resultado_esperado": "Respuesta 201 con numero_empleado 'EMP-0001', correo 'ana.perez@empresa.com' (normalizado a minúsculas) y estado 'activo'"
+    },
+    {
+      "id": "CP-02",
+      "escenario": "Registro exitoso de un nuevo empleado",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con correo ana.perez@empresa.com"
+      ],
+      "pasos": [
+        "Ingresar a la pantalla de registro de empleados",
+        "Completar el campo data-testid='empleado-nombre' con 'Ana Pérez'",
+        "Completar el campo data-testid='empleado-correo' con 'Ana.Perez@empresa.com'",
+        "Completar el campo data-testid='empleado-puesto' con 'Analista de RH'",
+        "Seleccionar en data-testid='empleado-departamento' la opción 'Recursos Humanos'",
+        "Completar el campo data-testid='empleado-fecha-ingreso' con '2024-01-15'",
+        "Hacer clic en data-testid='empleado-guardar'",
+        "Verificar el contenido de data-testid='mensaje-exito'"
+      ],
+      "datos": {
+        "nombre": "Ana Pérez",
+        "correo": "Ana.Perez@empresa.com",
+        "puesto": "Analista de RH",
+        "departamento": "Recursos Humanos",
+        "fecha_ingreso": "2024-01-15"
+      },
+      "resultado_esperado": "Se muestra en data-testid='mensaje-exito' el texto 'Empleado EMP-0001 registrado correctamente'"
+    },
+    {
+      "id": "CP-03",
+      "escenario": "Rechazo por correo ya registrado (regla 1)",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe un empleado registrado con correo carlos.ruiz@empresa.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'Carlos Ruiz Gómez', correo 'Carlos.Ruiz@empresa.com', puesto 'Supervisor', departamento 'Operaciones', fecha_ingreso '2024-02-01'",
+        "Verificar el código de estado de la respuesta",
+        "Verificar el mensaje de error devuelto"
+      ],
+      "datos": {
+        "nombre": "Carlos Ruiz Gómez",
+        "correo": "Carlos.Ruiz@empresa.com",
+        "puesto": "Supervisor",
+        "departamento": "Operaciones",
+        "fecha_ingreso": "2024-02-01"
+      },
+      "resultado_esperado": "Respuesta 409 con detail 'El correo ya está registrado'"
+    },
+    {
+      "id": "CP-04",
+      "escenario": "Rechazo por correo ya registrado (regla 1)",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe un empleado registrado con correo carlos.ruiz@empresa.com"
+      ],
+      "pasos": [
+        "Ingresar a la pantalla de registro de empleados",
+        "Completar el campo data-testid='empleado-nombre' con 'Carlos Ruiz Gómez'",
+        "Completar el campo data-testid='empleado-correo' con 'Carlos.Ruiz@empresa.com'",
+        "Completar el campo data-testid='empleado-puesto' con 'Supervisor'",
+        "Seleccionar en data-testid='empleado-departamento' la opción 'Operaciones'",
+        "Completar el campo data-testid='empleado-fecha-ingreso' con '2024-02-01'",
+        "Hacer clic en data-testid='empleado-guardar'",
+        "Verificar el contenido de data-testid='mensaje-error'"
+      ],
+      "datos": {
+        "nombre": "Carlos Ruiz Gómez",
+        "correo": "Carlos.Ruiz@empresa.com",
+        "puesto": "Supervisor",
+        "departamento": "Operaciones",
+        "fecha_ingreso": "2024-02-01"
+      },
+      "resultado_esperado": "Se muestra en data-testid='mensaje-error' el texto 'El correo ya está registrado'"
+    },
+    {
+      "id": "CP-05",
+      "escenario": "Rechazo por correo que no es corporativo (regla 2)",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con correo luis.gomez@gmail.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'Luis Gómez', correo 'luis.gomez@gmail.com', puesto 'Vendedor', departamento 'Ventas', fecha_ingreso '2024-02-01'",
+        "Verificar el código de estado de la respuesta",
+        "Verificar el mensaje de error devuelto"
+      ],
+      "datos": {
+        "nombre": "Luis Gómez",
+        "correo": "luis.gomez@gmail.com",
+        "puesto": "Vendedor",
+        "departamento": "Ventas",
+        "fecha_ingreso": "2024-02-01"
+      },
+      "resultado_esperado": "Respuesta 422 con detail 'Usa el correo corporativo @empresa.com'"
+    },
+    {
+      "id": "CP-06",
+      "escenario": "Rechazo por correo que no es corporativo (regla 2)",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con correo luis.gomez@gmail.com"
+      ],
+      "pasos": [
+        "Ingresar a la pantalla de registro de empleados",
+        "Completar el campo data-testid='empleado-nombre' con 'Luis Gómez'",
+        "Completar el campo data-testid='empleado-correo' con 'luis.gomez@gmail.com'",
+        "Completar el campo data-testid='empleado-puesto' con 'Vendedor'",
+        "Seleccionar en data-testid='empleado-departamento' la opción 'Ventas'",
+        "Completar el campo data-testid='empleado-fecha-ingreso' con '2024-02-01'",
+        "Hacer clic en data-testid='empleado-guardar'",
+        "Verificar el contenido de data-testid='mensaje-error'"
+      ],
+      "datos": {
+        "nombre": "Luis Gómez",
+        "correo": "luis.gomez@gmail.com",
+        "puesto": "Vendedor",
+        "departamento": "Ventas",
+        "fecha_ingreso": "2024-02-01"
+      },
+      "resultado_esperado": "Se muestra en data-testid='mensaje-error' el texto 'Usa el correo corporativo @empresa.com'"
+    },
+    {
+      "id": "CP-07",
+      "escenario": "Rechazo por nombre con menos de 2 caracteres (regla 3)",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con correo a.valido@empresa.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'A', correo 'a.valido@empresa.com', puesto 'Analista', departamento 'Finanzas', fecha_ingreso '2024-02-01'",
+        "Verificar el código de estado de la respuesta",
+        "Verificar el mensaje de error devuelto"
+      ],
+      "datos": {
+        "nombre": "A",
+        "correo": "a.valido@empresa.com",
+        "puesto": "Analista",
+        "departamento": "Finanzas",
+        "fecha_ingreso": "2024-02-01"
+      },
+      "resultado_esperado": "Respuesta 422 con detail 'El nombre debe tener entre 2 y 80 caracteres'"
+    },
+    {
+      "id": "CP-08",
+      "escenario": "Rechazo por nombre con menos de 2 caracteres (regla 3)",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con correo a.valido@empresa.com"
+      ],
+      "pasos": [
+        "Ingresar a la pantalla de registro de empleados",
+        "Completar el campo data-testid='empleado-nombre' con 'A'",
+        "Completar el campo data-testid='empleado-correo' con 'a.valido@empresa.com'",
+        "Completar el campo data-testid='empleado-puesto' con 'Analista'",
+        "Seleccionar en data-testid='empleado-departamento' la opción 'Finanzas'",
+        "Completar el campo data-testid='empleado-fecha-ingreso' con '2024-02-01'",
+        "Hacer clic en data-testid='empleado-guardar'",
+        "Verificar el contenido de data-testid='mensaje-error' asociado al campo nombre"
+      ],
+      "datos": {
+        "nombre": "A",
+        "correo": "a.valido@empresa.com",
+        "puesto": "Analista",
+        "departamento": "Finanzas",
+        "fecha_ingreso": "2024-02-01"
+      },
+      "resultado_esperado": "Se indica sobre el campo data-testid='empleado-nombre' el mensaje 'El nombre debe tener entre 2 y 80 caracteres' en data-testid='mensaje-error'"
+    },
+    {
+      "id": "CP-09",
+      "escenario": "Rechazo por fecha de ingreso futura (regla 4)",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con correo mario.diaz@empresa.com"
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados con nombre 'Mario Díaz', correo 'mario.diaz@empresa.com', puesto 'Técnico', departamento 'Tecnología', fecha_ingreso '2099-01-01'",
+        "Verificar el código de estado de la respuesta",
+        "Verificar el mensaje de error devuelto"
+      ],
+      "datos": {
+        "nombre": "Mario Díaz",
+        "correo": "mario.diaz@empresa.com",
+        "puesto": "Técnico",
+        "departamento": "Tecnología",
+        "fecha_ingreso": "2099-01-01"
+      },
+      "resultado_esperado": "Respuesta 422 con detail 'La fecha de ingreso no puede ser futura'"
+    },
+    {
+      "id": "CP-10",
+      "escenario": "Rechazo por fecha de ingreso futura (regla 4)",
+      "nivel": "e2e",
+      "precondiciones": [
+        "No existe ningún empleado con correo mario.diaz@empresa.com"
+      ],
+      "pasos": [
+        "Ingresar a la pantalla de registro de empleados",
+        "Completar el campo data-testid='empleado-nombre' con 'Mario Díaz'",
+        "Completar el campo data-testid='empleado-correo' con 'mario.diaz@empresa.com'",
+        "Completar el campo data-testid='empleado-puesto' con 'Técnico'",
+        "Seleccionar en data-testid='empleado-departamento' la opción 'Tecnología'",
+        "Completar el campo data-testid='empleado-fecha-ingreso' con '2099-01-01'",
+        "Hacer clic en data-testid='empleado-guardar'",
+        "Verificar el contenido de data-testid='mensaje-error'"
+      ],
+      "datos": {
+        "nombre": "Mario Díaz",
+        "correo": "mario.diaz@empresa.com",
+        "puesto": "Técnico",
+        "departamento": "Tecnología",
+        "fecha_ingreso": "2099-01-01"
+      },
+      "resultado_esperado": "Se muestra en data-testid='mensaje-error' el texto 'La fecha de ingreso no puede ser futura'"
+    }
+  ]
+}
