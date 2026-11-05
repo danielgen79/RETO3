@@ -1,0 +1,210 @@
+{
+  "historia": "HU-02",
+  "casos": [
+    {
+      "id": "CP-01",
+      "escenario": "Ver el listado completo del directorio",
+      "nivel": "api",
+      "precondiciones": [
+        "Existen registrados EMP-0001 Ana Pérez (activo), EMP-0002 Luis Gómez (baja) y EMP-0003 María López (activo)"
+      ],
+      "pasos": [
+        "Enviar GET /api/empleados sin parámetros de consulta"
+      ],
+      "datos": {
+        "metodo": "GET",
+        "url": "/api/empleados"
+      },
+      "resultado_esperado": "Código 200 y el cuerpo es una lista con los 3 empleados, incluyendo numero_empleado, nombre, puesto, departamento y estado; EMP-0001 con estado 'activo', EMP-0002 con estado 'baja', EMP-0003 con estado 'activo'."
+    },
+    {
+      "id": "CP-02",
+      "escenario": "Ver el listado completo del directorio",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existen registrados EMP-0001 Ana Pérez (activo), EMP-0002 Luis Gómez (baja) y EMP-0003 María López (activo)"
+      ],
+      "pasos": [
+        "Abrir la pantalla del directorio de empleados",
+        "Verificar que el elemento data-testid='tabla-empleados' esté visible",
+        "Verificar que existan las filas data-testid='fila-empleado-1', data-testid='fila-empleado-2' y data-testid='fila-empleado-3'",
+        "Verificar que data-testid='numero-empleado-1' muestre 'EMP-0001' y data-testid='estado-empleado-1' muestre 'Activo'",
+        "Verificar que data-testid='numero-empleado-2' muestre 'EMP-0002' y data-testid='estado-empleado-2' muestre 'Baja'",
+        "Verificar que data-testid='numero-empleado-3' muestre 'EMP-0003' y data-testid='estado-empleado-3' muestre 'Activo'"
+      ],
+      "datos": {
+        "empleados": "EMP-0001,EMP-0002,EMP-0003"
+      },
+      "resultado_esperado": "El directorio muestra las 3 filas con número de empleado, nombre, puesto, departamento y estado correctos."
+    },
+    {
+      "id": "CP-03",
+      "escenario": "Buscar por nombre sin distinguir mayúsculas de minúsculas",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe registrado EMP-0001 Ana Pérez (ana.perez@empresa.com)"
+      ],
+      "pasos": [
+        "Enviar GET /api/empleados?busqueda=ana"
+      ],
+      "datos": {
+        "metodo": "GET",
+        "url": "/api/empleados?busqueda=ana"
+      },
+      "resultado_esperado": "Código 200 y el cuerpo contiene únicamente al empleado EMP-0001 Ana Pérez."
+    },
+    {
+      "id": "CP-04",
+      "escenario": "Buscar por nombre sin distinguir mayúsculas de minúsculas",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe registrado EMP-0001 Ana Pérez en el directorio"
+      ],
+      "pasos": [
+        "Abrir la pantalla del directorio de empleados",
+        "Escribir 'ana' en el campo data-testid='buscar-empleados'",
+        "Verificar que data-testid='tabla-empleados' muestre únicamente la fila data-testid='fila-empleado-1'",
+        "Verificar que data-testid='numero-empleado-1' muestre 'EMP-0001'"
+      ],
+      "datos": {
+        "busqueda": "ana"
+      },
+      "resultado_esperado": "Solo se muestra la fila del empleado EMP-0001 Ana Pérez."
+    },
+    {
+      "id": "CP-05",
+      "escenario": "Buscar por correo sin distinguir mayúsculas de minúsculas",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe registrado EMP-0001 con correo ana.perez@empresa.com"
+      ],
+      "pasos": [
+        "Enviar GET /api/empleados?busqueda=ANA.PEREZ@EMPRESA.COM"
+      ],
+      "datos": {
+        "metodo": "GET",
+        "url": "/api/empleados?busqueda=ANA.PEREZ@EMPRESA.COM"
+      },
+      "resultado_esperado": "Código 200 y el cuerpo contiene únicamente al empleado con correo ana.perez@empresa.com."
+    },
+    {
+      "id": "CP-06",
+      "escenario": "Buscar por correo sin distinguir mayúsculas de minúsculas",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe registrado EMP-0001 con correo ana.perez@empresa.com en el directorio"
+      ],
+      "pasos": [
+        "Abrir la pantalla del directorio de empleados",
+        "Escribir 'ANA.PEREZ@EMPRESA.COM' en el campo data-testid='buscar-empleados'",
+        "Verificar que data-testid='tabla-empleados' muestre únicamente la fila data-testid='fila-empleado-1'",
+        "Verificar que data-testid='numero-empleado-1' muestre 'EMP-0001'"
+      ],
+      "datos": {
+        "busqueda": "ANA.PEREZ@EMPRESA.COM"
+      },
+      "resultado_esperado": "Solo se muestra la fila del empleado con correo ana.perez@empresa.com."
+    },
+    {
+      "id": "CP-07",
+      "escenario": "Filtrar por un departamento válido",
+      "nivel": "api",
+      "precondiciones": [
+        "Existe registrado EMP-0002 Luis Gómez del departamento Ventas"
+      ],
+      "pasos": [
+        "Enviar GET /api/empleados?departamento=Ventas"
+      ],
+      "datos": {
+        "metodo": "GET",
+        "url": "/api/empleados?departamento=Ventas"
+      },
+      "resultado_esperado": "Código 200 y el cuerpo contiene únicamente a los empleados del departamento Ventas (EMP-0002 Luis Gómez)."
+    },
+    {
+      "id": "CP-08",
+      "escenario": "Filtrar por un departamento válido",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existe registrado EMP-0002 Luis Gómez del departamento Ventas en el directorio"
+      ],
+      "pasos": [
+        "Abrir la pantalla del directorio de empleados",
+        "Seleccionar 'Ventas' en el campo data-testid='filtro-departamento'",
+        "Verificar que data-testid='tabla-empleados' muestre únicamente la fila data-testid='fila-empleado-2'",
+        "Verificar que data-testid='numero-empleado-2' muestre 'EMP-0002'"
+      ],
+      "datos": {
+        "departamento": "Ventas"
+      },
+      "resultado_esperado": "Solo se muestra la fila del empleado EMP-0002 Luis Gómez del departamento Ventas."
+    },
+    {
+      "id": "CP-09",
+      "escenario": "Un empleado dado de baja sigue apareciendo en el directorio",
+      "nivel": "api",
+      "precondiciones": [
+        "El empleado EMP-0002 Luis Gómez tiene estado 'baja'"
+      ],
+      "pasos": [
+        "Enviar GET /api/empleados sin parámetros de consulta"
+      ],
+      "datos": {
+        "metodo": "GET",
+        "url": "/api/empleados"
+      },
+      "resultado_esperado": "Código 200 y el listado incluye al empleado EMP-0002 Luis Gómez con estado 'baja'."
+    },
+    {
+      "id": "CP-10",
+      "escenario": "Un empleado dado de baja sigue apareciendo en el directorio",
+      "nivel": "e2e",
+      "precondiciones": [
+        "El empleado EMP-0002 Luis Gómez tiene estado 'baja'"
+      ],
+      "pasos": [
+        "Abrir la pantalla del directorio de empleados",
+        "Verificar que data-testid='fila-empleado-2' esté visible",
+        "Verificar que data-testid='estado-empleado-2' muestre 'Baja'"
+      ],
+      "datos": {
+        "numero_empleado": "EMP-0002"
+      },
+      "resultado_esperado": "El empleado EMP-0002 Luis Gómez aparece en el listado con estado 'Baja'."
+    },
+    {
+      "id": "CP-11",
+      "escenario": "Buscar un término que no coincide con ningún empleado",
+      "nivel": "api",
+      "precondiciones": [
+        "Existen empleados registrados en el directorio"
+      ],
+      "pasos": [
+        "Enviar GET /api/empleados?busqueda=Zzz_no_existe"
+      ],
+      "datos": {
+        "metodo": "GET",
+        "url": "/api/empleados?busqueda=Zzz_no_existe"
+      },
+      "resultado_esperado": "Código 200 y el cuerpo es una lista vacía."
+    },
+    {
+      "id": "CP-12",
+      "escenario": "Buscar un término que no coincide con ningún empleado",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Existen empleados registrados en el directorio"
+      ],
+      "pasos": [
+        "Abrir la pantalla del directorio de empleados",
+        "Escribir 'Zzz_no_existe' en el campo data-testid='buscar-empleados'",
+        "Verificar que data-testid='tabla-empleados' no muestre ninguna fila",
+        "Verificar que data-testid='sin-resultados' muestre el mensaje 'No se encontraron empleados que coincidan con la búsqueda.'"
+      ],
+      "datos": {
+        "busqueda": "Zzz_no_existe"
+      },
+      "resultado_esperado": "No se muestra ningún empleado y aparece el mensaje 'No se encontraron empleados que coincidan con la búsqueda.' en data-testid='sin-resultados'."
+    }
+  ]
+}

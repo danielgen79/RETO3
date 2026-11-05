@@ -21,3 +21,12 @@ export async function obtenerDepartamentos() {
   const respuesta = await fetch("/api/departamentos");
   return leerRespuesta(respuesta);
 }
+
+export async function obtenerEmpleados({ busqueda, departamento } = {}) {
+  const parametros = new URLSearchParams();
+  if (busqueda) parametros.set("busqueda", busqueda);
+  if (departamento) parametros.set("departamento", departamento);
+  const cadena = parametros.toString();
+  const respuesta = await fetch(`/api/empleados${cadena ? `?${cadena}` : ""}`);
+  return leerRespuesta(respuesta);
+}

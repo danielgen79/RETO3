@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from catalogo import DEPARTAMENTOS
@@ -41,6 +41,29 @@ def crear_empleado(datos: EmpleadoCrear, db: Session = Depends(obtener_db)):
     db.commit()
     db.refresh(empleado)
     return empleado
+
+
+@router.get("/empleados", response_model=list[EmpleadoSalida])
+def listar_empleados(
+    busqueda: str | None = None,
+    departamento: str | None = None,
+    db: Session = Depends(obtener_db),
+):
+    consulta = db.query(Empleado)
+
+    if busqueda:
+        patron = f"%{busqueda.lower()}%"
+        consulta = consulta.filter(
+            or_(
+                func.lower(Empleado.nombre).like(patron),
+                func.lower(Empleado.correo).like(patron),
+            )
+        )
+
+    if departamento in DEPARTAMENTOS:
+        consulta = consulta.filter(Empleado.departamento == departamento)
+
+    return consulta.order_by(Empleado.id.asc()).all()
 
 
 @router.get("/departamentos")

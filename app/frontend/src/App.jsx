@@ -1,3 +1,4 @@
+import DirectorioEmpleados from "./components/DirectorioEmpleados.jsx";
 import FormularioEmpleado from "./components/FormularioEmpleado.jsx";
 
 function App() {
@@ -5,6 +6,7 @@ function App() {
     <main>
       <h1>Registrar empleado</h1>
       <FormularioEmpleado />
+      <DirectorioEmpleados />
     </main>
   );
 }
