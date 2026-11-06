@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { obtenerDepartamentos, obtenerEmpleados } from "../api/empleados.js";
+import FormularioVacaciones from "./FormularioVacaciones.jsx";
 import ModalBaja from "./ModalBaja.jsx";
 
 const ETIQUETAS_ESTADO = {
@@ -16,6 +17,8 @@ export default function DirectorioEmpleados({
   const [departamento, setDepartamento] = useState("");
   const [departamentos, setDepartamentos] = useState([]);
   const [idDandoBaja, setIdDandoBaja] = useState(null);
+  const [idSolicitandoVacaciones, setIdSolicitandoVacaciones] =
+    useState(null);
 
   useEffect(() => {
     obtenerDepartamentos()
@@ -35,6 +38,9 @@ export default function DirectorioEmpleados({
 
   const empleadoDandoBaja = empleados.find(
     (empleado) => empleado.id === idDandoBaja
+  );
+  const empleadoSolicitandoVacaciones = empleados.find(
+    (empleado) => empleado.id === idSolicitandoVacaciones
   );
 
   return (
@@ -102,6 +108,14 @@ export default function DirectorioEmpleados({
                   >
                     Dar de baja
                   </button>
+                  {empleado.estado === "activo" && (
+                    <button
+                      data-testid={`vacaciones-abrir-${empleado.id}`}
+                      onClick={() => setIdSolicitandoVacaciones(empleado.id)}
+                    >
+                      Solicitar vacaciones
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -114,6 +128,13 @@ export default function DirectorioEmpleados({
           empleado={empleadoDandoBaja}
           onConfirmada={cargarEmpleados}
           onCancelar={() => setIdDandoBaja(null)}
+        />
+      )}
+
+      {empleadoSolicitandoVacaciones && (
+        <FormularioVacaciones
+          empleado={empleadoSolicitandoVacaciones}
+          onCerrar={() => setIdSolicitandoVacaciones(null)}
         />
       )}
     </section>

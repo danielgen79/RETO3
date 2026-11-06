@@ -1,0 +1,449 @@
+{
+  "historia": "HU-10",
+  "casos": [
+    {
+      "id": "CP-01",
+      "escenario": "Registrar una solicitud válida descuenta los días hábiles y calcula el saldo restante",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026 (POST /api/empleados)"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones usando el id del empleado creado, con fecha_inicio 2026-07-06 y fecha_fin 2026-07-10"
+      ],
+      "datos": {
+        "correo": "laura.gomez@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "201; dias_habiles=5; dias_restantes=7"
+    },
+    {
+      "id": "CP-02",
+      "escenario": "Registrar una solicitud válida descuenta los días hábiles y calcula el saldo restante",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026, visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2026-07-06 en vacaciones-fecha-inicio",
+        "Escribir 2026-07-10 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "laura.gomez@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "Código 201 y en vacaciones-mensaje se muestra 'Solicitud registrada: 5 días hábiles. Te quedan 7 días hábiles en 2026.'"
+    },
+    {
+      "id": "CP-03",
+      "escenario": "Los sábados, domingos y festivos dentro del periodo no se descuentan",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-12-21 y fecha_fin 2026-12-31"
+      ],
+      "datos": {
+        "correo": "marco.diaz@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-31"
+      },
+      "resultado_esperado": "201; dias_habiles=8; dias_restantes=4"
+    },
+    {
+      "id": "CP-04",
+      "escenario": "Un periodo compuesto solo por fin de semana no tiene días hábiles y se rechaza",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-07-11 y fecha_fin 2026-07-12"
+      ],
+      "datos": {
+        "correo": "sofia.ruiz@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-11",
+        "fecha_fin": "2026-07-12"
+      },
+      "resultado_esperado": "400; detail 'El periodo no incluye días hábiles'"
+    },
+    {
+      "id": "CP-05",
+      "escenario": "Un periodo compuesto solo por fin de semana no tiene días hábiles y se rechaza",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026, visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2026-07-11 en vacaciones-fecha-inicio",
+        "Escribir 2026-07-12 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "sofia.ruiz@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-11",
+        "fecha_fin": "2026-07-12"
+      },
+      "resultado_esperado": "Código 400 y en vacaciones-mensaje se muestra 'El periodo no incluye días hábiles'"
+    },
+    {
+      "id": "CP-06",
+      "escenario": "Usar exactamente los días que quedan en el año se acepta",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 5 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-07-13 y fecha_fin 2026-07-21"
+      ],
+      "datos": {
+        "correo": "carlos.vega@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "dias_usados": "5",
+        "fecha_inicio": "2026-07-13",
+        "fecha_fin": "2026-07-21"
+      },
+      "resultado_esperado": "201; dias_habiles=7; dias_restantes=0"
+    },
+    {
+      "id": "CP-07",
+      "escenario": "Pasarse por un día del saldo disponible se rechaza",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 4 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-08-10 y fecha_fin 2026-08-20"
+      ],
+      "datos": {
+        "correo": "elena.rios@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "dias_usados": "4",
+        "fecha_inicio": "2026-08-10",
+        "fecha_fin": "2026-08-20"
+      },
+      "resultado_esperado": "400; detail 'La solicitud excede los días disponibles: quedan 8 días hábiles'"
+    },
+    {
+      "id": "CP-08",
+      "escenario": "Pasarse por un día del saldo disponible se rechaza",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 4 días hábiles usados en 2026, visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2026-08-10 en vacaciones-fecha-inicio",
+        "Escribir 2026-08-20 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "elena.rios@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "dias_usados": "4",
+        "fecha_inicio": "2026-08-10",
+        "fecha_fin": "2026-08-20"
+      },
+      "resultado_esperado": "Código 400 y en vacaciones-mensaje se muestra 'La solicitud excede los días disponibles: quedan 8 días hábiles'"
+    },
+    {
+      "id": "CP-09",
+      "escenario": "Con el tope anual agotado se rechaza cualquier solicitud nueva",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 12 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-03-02 y fecha_fin 2026-03-02"
+      ],
+      "datos": {
+        "correo": "diego.pena@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "dias_usados": "12",
+        "fecha_inicio": "2026-03-02",
+        "fecha_fin": "2026-03-02"
+      },
+      "resultado_esperado": "400; detail 'La solicitud excede los días disponibles: quedan 0 días hábiles'"
+    },
+    {
+      "id": "CP-10",
+      "escenario": "Cumplir exactamente un año de antigüedad el día de inicio se acepta",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2025-12-21 y 0 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-12-21 y fecha_fin 2026-12-21"
+      ],
+      "datos": {
+        "correo": "natalia.soto@empresa.com",
+        "fecha_ingreso": "2025-12-21",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-21"
+      },
+      "resultado_esperado": "201; dias_habiles=1; dias_restantes=11"
+    },
+    {
+      "id": "CP-11",
+      "escenario": "Menos de un año de antigüedad se rechaza",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2025-12-21 y 0 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-12-18 y fecha_fin 2026-12-18"
+      ],
+      "datos": {
+        "correo": "ivan.molina@empresa.com",
+        "fecha_ingreso": "2025-12-21",
+        "fecha_inicio": "2026-12-18",
+        "fecha_fin": "2026-12-18"
+      },
+      "resultado_esperado": "400; detail 'Se requiere al menos un año de antigüedad a la fecha de inicio'"
+    },
+    {
+      "id": "CP-12",
+      "escenario": "Menos de un año de antigüedad se rechaza",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2025-12-21 y 0 días hábiles usados en 2026, visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2026-12-18 en vacaciones-fecha-inicio",
+        "Escribir 2026-12-18 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "ivan.molina@empresa.com",
+        "fecha_ingreso": "2025-12-21",
+        "fecha_inicio": "2026-12-18",
+        "fecha_fin": "2026-12-18"
+      },
+      "resultado_esperado": "Código 400 y en vacaciones-mensaje se muestra 'Se requiere al menos un año de antigüedad a la fecha de inicio'"
+    },
+    {
+      "id": "CP-13",
+      "escenario": "Una fecha de fin anterior a la de inicio se rechaza",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-07-10 y fecha_fin 2026-07-05"
+      ],
+      "datos": {
+        "correo": "paula.jimenez@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-10",
+        "fecha_fin": "2026-07-05"
+      },
+      "resultado_esperado": "400; detail 'La fecha de fin no puede ser anterior a la fecha de inicio'"
+    },
+    {
+      "id": "CP-14",
+      "escenario": "Una fecha de fin anterior a la de inicio se rechaza",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026, visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2026-07-10 en vacaciones-fecha-inicio",
+        "Escribir 2026-07-05 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "paula.jimenez@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-10",
+        "fecha_fin": "2026-07-05"
+      },
+      "resultado_esperado": "Código 400 y en vacaciones-mensaje se muestra 'La fecha de fin no puede ser anterior a la fecha de inicio'"
+    },
+    {
+      "id": "CP-15",
+      "escenario": "Un periodo que cruza de un año a otro se rechaza",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-12-28 y fecha_fin 2027-01-08"
+      ],
+      "datos": {
+        "correo": "hugo.navarro@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-12-28",
+        "fecha_fin": "2027-01-08"
+      },
+      "resultado_esperado": "400; detail 'Las vacaciones deben estar dentro de un mismo año calendario'"
+    },
+    {
+      "id": "CP-16",
+      "escenario": "Un periodo que cruza de un año a otro se rechaza",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026, visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2026-12-28 en vacaciones-fecha-inicio",
+        "Escribir 2027-01-08 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "hugo.navarro@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-12-28",
+        "fecha_fin": "2027-01-08"
+      },
+      "resultado_esperado": "Código 400 y en vacaciones-mensaje se muestra 'Las vacaciones deben estar dentro de un mismo año calendario'"
+    },
+    {
+      "id": "CP-17",
+      "escenario": "Un año fuera del rango soportado se rechaza",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2028"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2028-01-10 y fecha_fin 2028-01-14"
+      ],
+      "datos": {
+        "correo": "rosa.campos@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2028-01-10",
+        "fecha_fin": "2028-01-14"
+      },
+      "resultado_esperado": "400; detail 'Solo se pueden solicitar vacaciones en 2026 y 2027'"
+    },
+    {
+      "id": "CP-18",
+      "escenario": "Un año fuera del rango soportado se rechaza",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2028, visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2028-01-10 en vacaciones-fecha-inicio",
+        "Escribir 2028-01-14 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "rosa.campos@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2028-01-10",
+        "fecha_fin": "2028-01-14"
+      },
+      "resultado_esperado": "Código 400 y en vacaciones-mensaje se muestra 'Solo se pueden solicitar vacaciones en 2026 y 2027'"
+    },
+    {
+      "id": "CP-19",
+      "escenario": "Un empleado que no existe se rechaza",
+      "nivel": "api",
+      "precondiciones": [
+        "No existe ningún empleado con id 9999"
+      ],
+      "pasos": [
+        "POST /api/empleados/9999/vacaciones con fecha_inicio 2026-07-06 y fecha_fin 2026-07-10"
+      ],
+      "datos": {
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "404; detail 'Empleado no encontrado'"
+    },
+    {
+      "id": "CP-20",
+      "escenario": "Un empleado dado de baja no puede solicitar vacaciones",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado con fecha_ingreso 2020-01-01 y darlo de baja antes de la prueba"
+      ],
+      "pasos": [
+        "POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio 2026-07-06 y fecha_fin 2026-07-10"
+      ],
+      "datos": {
+        "correo": "tomas.leon@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "409; detail 'No se pueden solicitar vacaciones para un empleado dado de baja'"
+    },
+    {
+      "id": "CP-21",
+      "escenario": "Un empleado dado de baja no puede solicitar vacaciones",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado con fecha_ingreso 2020-01-01, darlo de baja y verificar que estado-empleado-{empleado_id} muestra 'Baja'"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Escribir 2026-07-06 en vacaciones-fecha-inicio",
+        "Escribir 2026-07-10 en vacaciones-fecha-fin",
+        "Clic en vacaciones-enviar"
+      ],
+      "datos": {
+        "correo": "tomas.leon@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "Código 409 y en vacaciones-mensaje se muestra 'No se pueden solicitar vacaciones para un empleado dado de baja'"
+    },
+    {
+      "id": "CP-22",
+      "escenario": "Consultar el saldo del año refleja los días usados y disponibles",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026",
+        "Registrar una solicitud de vacaciones del 2026-07-06 al 2026-07-10 para ese empleado"
+      ],
+      "pasos": [
+        "GET /api/empleados/{empleado_id}/vacaciones?anio=2026"
+      ],
+      "datos": {
+        "correo": "beatriz.ortiz@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10",
+        "anio": "2026"
+      },
+      "resultado_esperado": "200; dias_usados=5; dias_disponibles=7; la lista solicitudes tiene 1 elemento"
+    },
+    {
+      "id": "CP-23",
+      "escenario": "Consultar el saldo del año refleja los días usados y disponibles",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso 2020-01-01 y 0 días hábiles usados en 2026, registrar una solicitud de vacaciones del 2026-07-06 al 2026-07-10, y tener el empleado visible en el directorio"
+      ],
+      "pasos": [
+        "Clic en vacaciones-abrir-{empleado_id} del empleado creado",
+        "Verificar el valor mostrado en vacaciones-disponibles"
+      ],
+      "datos": {
+        "correo": "beatriz.ortiz@empresa.com",
+        "fecha_ingreso": "2020-01-01",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10",
+        "anio": "2026"
+      },
+      "resultado_esperado": "En vacaciones-disponibles se muestra 7"
+    }
+  ]
+}
