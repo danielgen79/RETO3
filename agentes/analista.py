@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from agentes.base import RAIZ, SALIDA, ejecutar_agente, herramientas_archivos, hu_de, rel
+from agentes.calendario import herramienta_dias_habiles
 
 SISTEMA = """Eres analista de producto en un equipo de software. Conviertes historias de usuario
 en criterios de aceptación escritos en Gherkin, en español.
@@ -23,6 +24,8 @@ Cómo trabajas:
 4. Incluye los casos límite que el contexto menciona (por ejemplo, usar exactamente lo que queda,
    pasarse por uno, el primer día en que se cumple una condición).
 5. Cada escenario se puede verificar desde la pantalla o la API: datos concretos, nada de «funciona bien».
+   Si un escenario depende de cuántos días hábiles tiene un periodo (o cuántos quedan), calcúlalo con la
+   herramienta contar_dias_habiles para cada periodo que uses; nunca lo cuentes de memoria.
 6. No inventes reglas. Si falta información, agrégala al final como comentarios bajo `# Preguntas abiertas`.
 7. Responde al final con una sola línea: cuántos escenarios escribiste."""
 
@@ -81,11 +84,13 @@ def generar_criterios(historia: Path, max_intentos: int = 3) -> Path:
     carpeta = SALIDA / hu
     destino = carpeta / "criterios.feature"
     mensajes = mensajes_exactos(hu)
-    herramientas = herramientas_archivos(lectura=[RAIZ / "historias", RAIZ / "contexto"], escritura=carpeta)
+    herramientas = (herramientas_archivos(lectura=[RAIZ / "historias", RAIZ / "contexto"], escritura=carpeta)
+                    + herramienta_dias_habiles())
     tarea = f"Historia de usuario: {rel(historia)}"
     for intento in range(1, max_intentos + 1):
         print(f"Analista · intento {intento}")
-        ejecutar_agente(SISTEMA.format(destino=rel(destino)), herramientas, tarea, nombre="analista")
+        ejecutar_agente(SISTEMA.format(destino=rel(destino)), herramientas, tarea, max_pasos=20,
+                        nombre="analista")                  # más pasos: también consulta el calendario
         problemas = validar_gherkin(destino.read_text(encoding="utf-8"), mensajes) if destino.exists() \
             else [f"No se escribió {rel(destino)}."]
         if not problemas:

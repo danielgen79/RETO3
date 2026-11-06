@@ -12,6 +12,7 @@ from pydantic import BaseModel, ValidationError
 
 from agentes.analista import escenarios, mensajes_exactos
 from agentes.base import RAIZ, Herramienta, ejecutar_agente, herramientas_archivos, rel
+from agentes.calendario import herramienta_dias_habiles
 
 
 class CasoPrueba(BaseModel):
@@ -45,6 +46,9 @@ Cómo trabajas:
    para que los casos no dependan entre sí ni del orden en que se ejecutan.
 6. En "resultado_esperado" escribe el código de respuesta y el mensaje exacto, letra por letra,
    tal como aparece en los criterios (con el número concreto donde el mensaje lleva un número).
+   Comprueba con la herramienta contar_dias_habiles cada periodo que uses y cada número de días
+   hábiles esperado; nunca los cuentes de memoria. Si un número de los criterios no coincide con la
+   herramienta, usa el de la herramienta y dilo en "precondiciones".
 7. Guarda los casos llamando a la herramienta guardar_casos (no escribas el JSON a mano),
    EN LOTES DE MÁXIMO 5 CASOS POR LLAMADA: cada llamada agrega sus casos a los ya guardados, y un
    caso con un id que ya existe reemplaza al anterior. Escribe pasos y precondiciones breves.
@@ -111,7 +115,7 @@ def disenar_casos(criterios: Path, max_intentos: int = 3) -> Path:
     mensajes = mensajes_exactos(carpeta.name)              # carpeta.name es la historia, por ejemplo HU-10
     lectura = [h for h in herramientas_archivos(lectura=[RAIZ / "contexto", carpeta], escritura=carpeta)
                if h.nombre != "escribir_archivo"]          # solo se escribe a través de guardar_casos
-    herramientas = lectura + [herramienta_guardar_casos(destino)]
+    herramientas = lectura + herramienta_dias_habiles() + [herramienta_guardar_casos(destino)]
     sistema = SISTEMA.format(criterios=rel(criterios))
     gherkin = criterios.read_text(encoding="utf-8")
     tarea = f"Diseña los casos de prueba para {rel(criterios)}."
