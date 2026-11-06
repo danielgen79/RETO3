@@ -45,7 +45,9 @@ Cómo trabajas:
    para que los casos no dependan entre sí ni del orden en que se ejecutan.
 6. En "resultado_esperado" escribe el código de respuesta y el mensaje exacto, letra por letra,
    tal como aparece en los criterios (con el número concreto donde el mensaje lleva un número).
-7. Guarda los casos llamando a la herramienta guardar_casos (no escribas el JSON a mano).
+7. Guarda los casos llamando a la herramienta guardar_casos (no escribas el JSON a mano),
+   EN LOTES DE MÁXIMO 5 CASOS POR LLAMADA: cada llamada agrega sus casos a los ya guardados, y un
+   caso con un id que ya existe reemplaza al anterior. Escribe pasos y precondiciones breves.
    - "nivel" solo puede ser "api" o "e2e".
    - En "datos" TODOS los valores son texto: "201", no 201; para un campo vacío usa "", nunca null.
    - En "escenario" copia el nombre del escenario EXACTAMENTE como aparece después de "Escenario:".
@@ -84,12 +86,19 @@ def herramienta_guardar_casos(destino: Path) -> Herramienta:
         except ValidationError as e:  # el error regresa al modelo como texto, corto y accionable
             raise ValueError("Los casos no cumplen el esquema: " + "; ".join(
                 f"{'.'.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()[:5]))
-        destino.write_text(plan.model_dump_json(indent=2), encoding="utf-8")
-        return f"Guardados {len(plan.casos)} casos en {rel(destino)}"
+        # Se guarda por lotes: los casos nuevos se suman a los anteriores y un id repetido reemplaza al viejo.
+        # Así una historia con muchos escenarios no obliga a escribir todo en una sola respuesta (max_tokens).
+        por_id = {}
+        if destino.exists():
+            por_id = {c.id: c for c in PlanPruebas.model_validate_json(destino.read_text(encoding="utf-8")).casos}
+        por_id.update({c.id: c for c in plan.casos})
+        total = PlanPruebas(historia=historia, casos=list(por_id.values()))
+        destino.write_text(total.model_dump_json(indent=2), encoding="utf-8")
+        return f"Guardados {len(plan.casos)} casos; el archivo {rel(destino)} tiene {len(total.casos)} en total"
     return Herramienta(
         "guardar_casos",
-        "Guarda el plan de pruebas en casos_prueba.json y lo valida; si hay errores, los devuelve para que "
-        "corrijas. Ejemplo: historia='HU-01', casos=[{'id': 'CP-01', 'escenario': 'Alta exitosa', 'nivel': 'api', "
+        "Guarda un lote de hasta 5 casos en casos_prueba.json (se suman a los ya guardados; un id repetido "
+        "reemplaza al anterior) y lo valida; si hay errores, los devuelve para que corrijas. Ejemplo: historia='HU-01', casos=[{'id': 'CP-01', 'escenario': 'Alta exitosa', 'nivel': 'api', "
         "'precondiciones': [], 'pasos': ['...'], 'datos': {'correo': 'ana@empresa.com'}, 'resultado_esperado': '...'}].",
         {"historia": {"type": "string"},
          "casos": {"type": "array", "items": CasoPrueba.model_json_schema()}},
@@ -106,9 +115,10 @@ def disenar_casos(criterios: Path, max_intentos: int = 3) -> Path:
     sistema = SISTEMA.format(criterios=rel(criterios))
     gherkin = criterios.read_text(encoding="utf-8")
     tarea = f"Diseña los casos de prueba para {rel(criterios)}."
+    destino.unlink(missing_ok=True)                        # cada ejecución empieza sin casos viejos
     for intento in range(1, max_intentos + 1):
         print(f"Diseñador de pruebas · intento {intento}")
-        ejecutar_agente(sistema, herramientas, tarea, nombre="disenador")
+        ejecutar_agente(sistema, herramientas, tarea, max_pasos=25, nombre="disenador")   # varios lotes
         problemas = validar_plan(destino.read_text(encoding="utf-8"), gherkin, mensajes) if destino.exists() \
             else [f"No se escribió {rel(destino)}."]
         if not problemas:
