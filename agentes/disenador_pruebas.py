@@ -3,13 +3,14 @@
 Uso:  python -m agentes.disenador_pruebas salida/HU-01/criterios.feature
 """
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
-from agentes.analista import escenarios
+from agentes.analista import escenarios, mensajes_exactos
 from agentes.base import RAIZ, Herramienta, ejecutar_agente, herramientas_archivos, rel
 
 
@@ -36,16 +37,25 @@ Cómo trabajas:
 2. Para cada escenario escribe al menos un caso de nivel "api". Si el escenario involucra la pantalla,
    escribe además uno de nivel "e2e" cuyos pasos mencionen los data-testid que se usan.
 3. Usa datos concretos. Para correos usa el dominio corporativo empresa.com.
-4. Guarda los casos llamando a la herramienta guardar_casos (no escribas el JSON a mano).
+4. Los ids de empleado los asigna el sistema al crearlo: en rutas y data-testid escribe la plantilla
+   tal como viene en las convenciones (por ejemplo fila-empleado-{{id}} o
+   /api/empleados/{{empleado_id}}/vacaciones) y aclara que se usa el id del empleado creado en la
+   precondición. Nunca uses un número de empleado de ejemplo (como EMP-0007) en rutas ni data-testid.
+5. Cada caso crea su propio empleado en las precondiciones, con la fecha_ingreso que el caso necesita,
+   para que los casos no dependan entre sí ni del orden en que se ejecutan.
+6. En "resultado_esperado" escribe el código de respuesta y el mensaje exacto, letra por letra,
+   tal como aparece en los criterios (con el número concreto donde el mensaje lleva un número).
+7. Guarda los casos llamando a la herramienta guardar_casos (no escribas el JSON a mano).
    - "nivel" solo puede ser "api" o "e2e".
    - En "datos" TODOS los valores son texto: "201", no 201; para un campo vacío usa "", nunca null.
    - En "escenario" copia el nombre del escenario EXACTAMENTE como aparece después de "Escenario:".
    - Si guardar_casos devuelve un error, corrige lo que indica y vuelve a llamarla.
-5. Responde al final con una sola línea: cuántos casos escribiste."""
+8. Responde al final con una sola línea: cuántos casos escribiste."""
 
 
-def validar_plan(texto: str, gherkin: str) -> list[str]:
-    """Evaluador determinista: JSON válido y cada escenario cubierto por al menos un caso."""
+def validar_plan(texto: str, gherkin: str, mensajes: list[str] | None = None) -> list[str]:
+    """Evaluador determinista: JSON válido, cada escenario cubierto y, si se pasan `mensajes`,
+    cada mensaje exacto presente en algún caso (un « N » acepta un número concreto)."""
     try:
         plan = PlanPruebas.model_validate_json(texto)
     except ValidationError as e:
@@ -55,6 +65,14 @@ def validar_plan(texto: str, gherkin: str) -> list[str]:
     ids = [c.id for c in plan.casos]
     if len(ids) != len(set(ids)):
         problemas.append("Hay ids de caso repetidos.")
+    contenido = "\n".join(c.resultado_esperado + "\n" + "\n".join(c.pasos) + "\n" + "\n".join(c.datos.values())
+                          for c in plan.casos)
+    for mensaje in mensajes or []:
+        patron = r" (?:N|\d+) ".join(re.escape(parte) for parte in mensaje.split(" N "))
+        if not re.search(patron, contenido):
+            problemas.append(f"Ningún caso verifica el mensaje exacto, letra por letra: «{mensaje}».")
+    if re.search(r"[-/]EMP-\d", contenido):              # p. ej. fila-empleado-EMP-0007 o /api/empleados/EMP-0007
+        problemas.append("Usa la plantilla con {id} del empleado creado, no un número de empleado de ejemplo.")
     return problemas
 
 
@@ -78,9 +96,10 @@ def herramienta_guardar_casos(destino: Path) -> Herramienta:
         guardar_casos)
 
 
-def disenar_casos(criterios: Path, max_intentos: int = 2) -> Path:
+def disenar_casos(criterios: Path, max_intentos: int = 3) -> Path:
     carpeta = criterios.parent
     destino = carpeta / "casos_prueba.json"
+    mensajes = mensajes_exactos(carpeta.name)              # carpeta.name es la historia, por ejemplo HU-10
     lectura = [h for h in herramientas_archivos(lectura=[RAIZ / "contexto", carpeta], escritura=carpeta)
                if h.nombre != "escribir_archivo"]          # solo se escribe a través de guardar_casos
     herramientas = lectura + [herramienta_guardar_casos(destino)]
@@ -90,10 +109,11 @@ def disenar_casos(criterios: Path, max_intentos: int = 2) -> Path:
     for intento in range(1, max_intentos + 1):
         print(f"Diseñador de pruebas · intento {intento}")
         ejecutar_agente(sistema, herramientas, tarea, nombre="disenador")
-        problemas = validar_plan(destino.read_text(encoding="utf-8"), gherkin) if destino.exists() \
+        problemas = validar_plan(destino.read_text(encoding="utf-8"), gherkin, mensajes) if destino.exists() \
             else [f"No se escribió {rel(destino)}."]
         if not problemas:
             return destino
+        print("  Validador de casos:\n  - " + "\n  - ".join(problemas))
         tarea += "\n\nTu versión anterior tiene estos problemas; corrígelos:\n- " + "\n- ".join(problemas)
     raise ValueError("Casos inválidos tras varios intentos:\n- " + "\n- ".join(problemas))
 

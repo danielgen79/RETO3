@@ -32,6 +32,9 @@ Reglas:
   usando page.get_by_test_id(...) con los data-testid de CLAUDE.md.
 - Un test por caso; su docstring empieza con el id del caso (por ejemplo "CP-03: ...").
 - Cada test crea sus propios datos con correos únicos (uuid) para poder repetirse sin choques.
+  Nunca reutilices un empleado entre tests: crea uno nuevo por test, con la fecha_ingreso que el
+  caso necesita (por ejemplo, para probar antigüedad o el tope anual de vacaciones).
+- Compara códigos y mensajes con igualdad exacta (==), letra por letra, nunca con `in`.
 - Comprueba la sintaxis con `python -m pytest tests --collect-only -q`. No ejecutes las pruebas completas.
 Responde con la lista de archivos y cuántos tests escribiste."""
 
