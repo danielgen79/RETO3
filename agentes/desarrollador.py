@@ -20,7 +20,9 @@ Reglas adicionales:
 - Valida en el orden exacto que indiquen las convenciones y devuelve el primer error que aplique.
 - Implementa solo las reglas que recibes: no agregues validaciones que nadie pidió
   (por ejemplo, no rechaces fechas pasadas ni solicitudes que se traslapen).
-- Los cálculos de negocio (como contar días hábiles) van en el backend, nunca en el navegador."""
+- Los cálculos de negocio (como contar días hábiles) van en el backend, nunca en el navegador.
+- Solo detén procesos que tú iniciaste (guarda su PID con $! al lanzarlos). Nunca detengas procesos
+  ajenos ni los que ocupan los puertos 8000 u 8080: son los contenedores de Docker."""
 
 ESCRITURA = ["backend/*", "frontend/*"]
 PROGRAMAS = {"cd", "ls", "cat", "mkdir", "npm", "npx", "node", "python", "python3", "curl", "sleep", "kill"}
@@ -55,7 +57,8 @@ def construir(hu: str, plan: str, errores: str = "") -> tuple[str, float]:
     """Edición: Claude Code implementa el plan aprobado en backend/ y frontend/."""
     preparar_app()
     prompt = (f"{requisitos(hu)}\n\n## Plan aprobado\n{plan}\n\nImplementa {hu} siguiendo el plan aprobado. "
-              "Al terminar, comprueba que el backend arranca (`python -m uvicorn main:app` desde backend/) "
+              "Al terminar, comprueba que el backend arranca (`python -m uvicorn main:app --port 8011` desde "
+              "backend/; los puertos 8000 y 8080 son de Docker: no los uses ni detengas lo que corre en ellos) "
               "y que `npm run build` funciona en frontend/. Responde con un resumen de los archivos que cambiaste.")
     if errores:
         prompt += f"\n\n## La verificación anterior falló; corrige esto\n{errores}"
