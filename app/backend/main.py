@@ -7,14 +7,12 @@ from fastapi.responses import JSONResponse
 import modelos  # noqa: F401 registra el modelo Empleado en Base.metadata
 from database import Base, engine
 from rutas_empleados import router as router_empleados
-from rutas_vacaciones import router as router_vacaciones
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 app.include_router(router_empleados, prefix="/api")
-app.include_router(router_vacaciones, prefix="/api")
 
 
 @app.exception_handler(RequestValidationError)
