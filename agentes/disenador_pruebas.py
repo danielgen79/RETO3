@@ -50,7 +50,7 @@ Cómo trabajas:
    hábiles esperado; nunca los cuentes de memoria. Si un número de los criterios no coincide con la
    herramienta, usa el de la herramienta y dilo en "precondiciones".
 7. Guarda los casos llamando a la herramienta guardar_casos (no escribas el JSON a mano),
-   EN LOTES DE MÁXIMO 5 CASOS POR LLAMADA: cada llamada agrega sus casos a los ya guardados, y un
+   EN LOTES DE MÁXIMO 4 CASOS POR LLAMADA: cada llamada agrega sus casos a los ya guardados, y un
    caso con un id que ya existe reemplaza al anterior. Escribe pasos y precondiciones breves.
    - "nivel" solo puede ser "api" o "e2e".
    - En "datos" TODOS los valores son texto: "201", no 201; para un campo vacío usa "", nunca null.
@@ -82,9 +82,17 @@ def validar_plan(texto: str, gherkin: str, mensajes: list[str] | None = None) ->
     return problemas
 
 
+# Casos por llamada a guardar_casos. Una llamada grande (más el razonamiento del modelo) puede rebasar
+# max_tokens y cortar la respuesta; por eso el esquema y la función lo limitan.
+MAX_POR_LOTE = 4
+
+
 def herramienta_guardar_casos(destino: Path) -> Herramienta:
     """El contrato viaja en el esquema de la herramienta: el modelo llena campos, no escribe JSON a mano."""
     def guardar_casos(historia: str, casos: list) -> str:
+        if len(casos) > MAX_POR_LOTE:                      # el límite lo impone el código, no la instrucción
+            raise ValueError(f"Recibí {len(casos)} casos; el máximo es {MAX_POR_LOTE} por llamada. "
+                             "Guarda este lote en varias llamadas más pequeñas.")
         try:
             plan = PlanPruebas.model_validate({"historia": historia, "casos": casos})
         except ValidationError as e:  # el error regresa al modelo como texto, corto y accionable
@@ -101,11 +109,11 @@ def herramienta_guardar_casos(destino: Path) -> Herramienta:
         return f"Guardados {len(plan.casos)} casos; el archivo {rel(destino)} tiene {len(total.casos)} en total"
     return Herramienta(
         "guardar_casos",
-        "Guarda un lote de hasta 5 casos en casos_prueba.json (se suman a los ya guardados; un id repetido "
+        "Guarda un lote de hasta 4 casos en casos_prueba.json (se suman a los ya guardados; un id repetido "
         "reemplaza al anterior) y lo valida; si hay errores, los devuelve para que corrijas. Ejemplo: historia='HU-01', casos=[{'id': 'CP-01', 'escenario': 'Alta exitosa', 'nivel': 'api', "
         "'precondiciones': [], 'pasos': ['...'], 'datos': {'correo': 'ana@empresa.com'}, 'resultado_esperado': '...'}].",
         {"historia": {"type": "string"},
-         "casos": {"type": "array", "items": CasoPrueba.model_json_schema()}},
+         "casos": {"type": "array", "items": CasoPrueba.model_json_schema(), "maxItems": MAX_POR_LOTE}},
         guardar_casos)
 
 
