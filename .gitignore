@@ -2,7 +2,6 @@
 __pycache__/
 *.pyc
 .env
-auditoria.jsonl
 .DS_Store
 app/frontend/node_modules/
 app/frontend/dist/
