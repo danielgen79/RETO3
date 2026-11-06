@@ -1,0 +1,258 @@
+{
+  "historia": "HU-10",
+  "casos": [
+    {
+      "id": "CP-01",
+      "escenario": "Camino feliz - se registra una solicitud válida y un festivo dentro del periodo no se descuenta",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 0 días hábiles usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-12-21' y fecha_fin '2026-12-31'.",
+        "Revisar el código de respuesta y los campos dias_habiles y dias_restantes."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "dias_usados_previos_2026": "0",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-31"
+      },
+      "resultado_esperado": "201; dias_habiles=8; dias_restantes=4."
+    },
+    {
+      "id": "CP-02",
+      "escenario": "Camino feliz - se registra una solicitud válida y un festivo dentro del periodo no se descuenta",
+      "nivel": "e2e",
+      "precondiciones": [
+        "Crear, vía API, un empleado activo con fecha_ingreso '2024-01-10' y 0 días hábiles usados en 2026; se usa el id del empleado creado en los data-testid."
+      ],
+      "pasos": [
+        "En el directorio, hacer clic en el botón con data-testid 'vacaciones-abrir-{empleado_id}' del empleado creado.",
+        "Completar el campo 'vacaciones-fecha-inicio' con '2026-12-21' y el campo 'vacaciones-fecha-fin' con '2026-12-31'.",
+        "Hacer clic en el botón 'vacaciones-enviar'.",
+        "Leer el texto mostrado en el elemento 'vacaciones-mensaje'."
+      ],
+      "datos": {
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-31"
+      },
+      "resultado_esperado": "El elemento 'vacaciones-mensaje' muestra exactamente: Solicitud registrada: 8 días hábiles. Te quedan 4 días hábiles en 2026."
+    },
+    {
+      "id": "CP-03",
+      "escenario": "Límite - se puede usar exactamente los días hábiles que quedan en el año",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 5 días hábiles ya usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-07-13' y fecha_fin '2026-07-21'.",
+        "Revisar el código de respuesta y los campos dias_habiles y dias_restantes."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "dias_usados_previos_2026": "5",
+        "fecha_inicio": "2026-07-13",
+        "fecha_fin": "2026-07-21"
+      },
+      "resultado_esperado": "201; dias_habiles=7; dias_restantes=0."
+    },
+    {
+      "id": "CP-04",
+      "escenario": "Límite - el empleado puede solicitar vacaciones el mismo día en que cumple exactamente un año de antigüedad",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2025-12-21' y 0 días hábiles usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-12-21' y fecha_fin '2026-12-21'.",
+        "Revisar el código de respuesta y los campos dias_habiles y dias_restantes."
+      ],
+      "datos": {
+        "fecha_ingreso": "2025-12-21",
+        "dias_usados_previos_2026": "0",
+        "fecha_inicio": "2026-12-21",
+        "fecha_fin": "2026-12-21"
+      },
+      "resultado_esperado": "201; dias_habiles=1; dias_restantes=11."
+    },
+    {
+      "id": "CP-05",
+      "escenario": "Error - el empleado no existe",
+      "nivel": "api",
+      "precondiciones": [
+        "No crear ningún empleado; se usa un id 999 que no corresponde a ningún empleado registrado en el sistema."
+      ],
+      "pasos": [
+        "Enviar POST /api/empleados/999/vacaciones con fecha_inicio '2026-07-06' y fecha_fin '2026-07-10'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "empleado_id": "999",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "404; detail: Empleado no encontrado"
+    },
+    {
+      "id": "CP-06",
+      "escenario": "Error - el empleado está dado de baja",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado con fecha_ingreso '2024-01-10' y darlo de baja (estado 'baja') antes de la solicitud (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado, darlo de baja y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-07-06' y fecha_fin '2026-07-10'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "estado": "baja",
+        "fecha_inicio": "2026-07-06",
+        "fecha_fin": "2026-07-10"
+      },
+      "resultado_esperado": "409; detail: No se pueden solicitar vacaciones para un empleado dado de baja"
+    },
+    {
+      "id": "CP-07",
+      "escenario": "Error - la fecha de fin es anterior a la fecha de inicio",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 0 días hábiles usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-07-10' y fecha_fin '2026-07-05'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "fecha_inicio": "2026-07-10",
+        "fecha_fin": "2026-07-05"
+      },
+      "resultado_esperado": "400; detail: La fecha de fin no puede ser anterior a la fecha de inicio"
+    },
+    {
+      "id": "CP-08",
+      "escenario": "Error - el periodo cruza de un año a otro",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 0 días hábiles usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-12-28' y fecha_fin '2027-01-08'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "fecha_inicio": "2026-12-28",
+        "fecha_fin": "2027-01-08"
+      },
+      "resultado_esperado": "400; detail: Las vacaciones deben estar dentro de un mismo año calendario"
+    },
+    {
+      "id": "CP-09",
+      "escenario": "Error - el año solicitado no está en la tabla de festivos",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 0 días hábiles usados en 2028 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2028-01-10' y fecha_fin '2028-01-14'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "fecha_inicio": "2028-01-10",
+        "fecha_fin": "2028-01-14"
+      },
+      "resultado_esperado": "400; detail: Solo se pueden solicitar vacaciones en 2026 y 2027"
+    },
+    {
+      "id": "CP-10",
+      "escenario": "Error - antigüedad insuficiente a la fecha de inicio",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2025-12-21' y 0 días hábiles usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-12-18' y fecha_fin '2026-12-18'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2025-12-21",
+        "fecha_inicio": "2026-12-18",
+        "fecha_fin": "2026-12-18"
+      },
+      "resultado_esperado": "400; detail: Se requiere al menos un año de antigüedad a la fecha de inicio"
+    },
+    {
+      "id": "CP-11",
+      "escenario": "Error - el periodo no incluye ningún día hábil",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 0 días hábiles usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-07-11' y fecha_fin '2026-07-12'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "fecha_inicio": "2026-07-11",
+        "fecha_fin": "2026-07-12"
+      },
+      "resultado_esperado": "400; detail: El periodo no incluye días hábiles"
+    },
+    {
+      "id": "CP-12",
+      "escenario": "Error - la solicitud rebasa los días disponibles por un día",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 4 días hábiles ya usados en 2026 (el sistema asigna su id y número de empleado).",
+        "El periodo solicitado tiene 9 días hábiles según el conteo verificado con la herramienta, uno más que los 8 días hábiles disponibles."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-08-03' y fecha_fin '2026-08-13'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "dias_usados_previos_2026": "4",
+        "fecha_inicio": "2026-08-03",
+        "fecha_fin": "2026-08-13"
+      },
+      "resultado_esperado": "400; detail: La solicitud excede los días disponibles: quedan 8 días hábiles"
+    },
+    {
+      "id": "CP-13",
+      "escenario": "Error - el tope anual ya está agotado",
+      "nivel": "api",
+      "precondiciones": [
+        "Crear un empleado activo con fecha_ingreso '2024-01-10' y 12 días hábiles ya usados en 2026 (el sistema asigna su id y número de empleado)."
+      ],
+      "pasos": [
+        "Registrar el empleado y guardar el {empleado_id} devuelto por la API.",
+        "Enviar POST /api/empleados/{empleado_id}/vacaciones con fecha_inicio '2026-09-14' y fecha_fin '2026-09-18'.",
+        "Revisar el código de respuesta y el mensaje de error."
+      ],
+      "datos": {
+        "fecha_ingreso": "2024-01-10",
+        "dias_usados_previos_2026": "12",
+        "fecha_inicio": "2026-09-14",
+        "fecha_fin": "2026-09-18"
+      },
+      "resultado_esperado": "400; detail: La solicitud excede los días disponibles: quedan 0 días hábiles"
+    }
+  ]
+}
